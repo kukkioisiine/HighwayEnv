@@ -167,11 +167,11 @@ class CustomMergeEnv(MergeEnv):
             road.vehicles.append(other_vehicles_type(road, pos, speed=speed + self.np_random.uniform(-1, 1)))
 
         # 合流車両（1台）
-        merging_lane = road.network.get_lane(("j", "k", 0))
-        merging_vehicle = other_vehicles_type(
-            road, merging_lane.position(110, 0), speed=20
-        )
-        merging_vehicle.target_speed = 30
-        road.vehicles.append(merging_vehicle)
+        #merging_lane = road.network.get_lane(("j", "k", 0))
+        #merging_vehicle = other_vehicles_type(
+            #road, merging_lane.position(110, 0), speed=20
+        #)
+        #merging_vehicle.target_speed = 30
+        #road.vehicles.append(merging_vehicle)
 
         self.vehicle = ego_vehicle
