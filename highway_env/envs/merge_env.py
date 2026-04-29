@@ -1,3 +1,5 @@
+# これがmerge環境の道路を作成したり，車を配置するコードになっている．
+
 from __future__ import annotations
 
 import numpy as np

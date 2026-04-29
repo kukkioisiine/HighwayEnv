@@ -21,7 +21,7 @@ config = {
 }
 
 agent = PPOAgent(n_envs=1, config=config)
-agent.train(total_timesteps=int(5000))
+agent.train(total_timesteps=int(1000))
 
 # 登録せずに直接使う場合
 #env = CustomMergeEnv(render_mode="rgb_array")
@@ -37,7 +37,7 @@ while True:
     obs, info = test_env.reset()
     while not (done or truncated):
         action, _states = agent.predict(obs)
-        print(action)
+        #print(action)
         obs, reward, done, truncated, info = test_env.step(action)
         test_env.render()
-        time.sleep(0.05)
+        time.sleep(0.2)

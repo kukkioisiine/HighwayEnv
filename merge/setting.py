@@ -24,6 +24,9 @@ from highway_env.road.lane import LineType, SineLane, StraightLane
 from highway_env.road.road import Road, RoadNetwork
 from highway_env.vehicle.objects import Obstacle
 
+#IntentVehcleのクラスメソッド
+from IntentVehicle import IntentVehicle
+
 def _reset(self):
     self._create_road()
     self._create_vehicles()
@@ -201,7 +204,7 @@ class UniqueEnv(AbstractEnv):
         :return: is the episode truncated
         """
         #raise NotImplementedError
-        return self.time >= 20
+        return self.time >= 30
 
     def _info(self, obs: Observation, action: Action | None = None) -> dict:
         """
@@ -314,30 +317,36 @@ class UniqueEnv(AbstractEnv):
         self.road = road
 
     ###プログラムを動かす際に利用される(車の配置の初期位置を決める)
-    def _create_vehicles(self) -> None:
-        road = self.road
-        lanes_count = self.config.get("lanes_count", 2)
+
+    ###ここから新たにやりたいこと
+    ###車の配置で，一台だけ合流車線の車とやりとりする車を配置する．
+    ###その車の行動を，先行文献のように，idleと減速だけの行動[1,0,0,0,1]や，idleと加速だけの行動[1,0,0,1,0]に行動を制限する．
+    ###それを状態としておいたときに，合流側がその意図を汲むように学習を行う．
+
+    #def _create_vehicles(self) -> None:
+        #road = self.road
+        #lanes_count = self.config.get("lanes_count", 2)
 
         #本線の場合，どの車線に配置させるかをランダムで決める
-        ego_lane_index = self.np_random.integers(lanes_count) #合流車線の場合は利用しない(1車線しかないため)
+        #ego_lane_index = self.np_random.integers(lanes_count) #合流車線の場合は利用しない(1車線しかないため)
         #自車両を本線に置く場合
         #ego_vehicle = self.action_type.vehicle_class(
             #road, road.network.get_lane(("a", "b", ego_lane_index)).position(30, 0), speed=30
         #)
         #自車両を合流車線に置く場合
-        ego_vehicle = self.action_type.vehicle_class(
-            road, road.network.get_lane(("j", "k", 0)).position(30, 0), speed=30
-        )
-        road.vehicles.append(ego_vehicle)
+        #ego_vehicle = self.action_type.vehicle_class(
+            #road, road.network.get_lane(("j", "k", 0)).position(30, 0), speed=30
+        #)
+        #road.vehicles.append(ego_vehicle)
 
-        other_vehicles_type = utils.class_from_path(self.config["other_vehicles_type"])
+        #other_vehicles_type = utils.class_from_path(self.config["other_vehicles_type"])
 
-        # 他車（本線）
-        for position, speed in [(90, 29), (70, 31), (5, 31.5)]:
-            lane_index = self.np_random.integers(lanes_count)
-            lane = road.network.get_lane(("a", "b", lane_index))
-            pos = lane.position(position + self.np_random.uniform(-5, 5), 0)
-            road.vehicles.append(other_vehicles_type(road, pos, speed=speed + self.np_random.uniform(-1, 1)))
+        ## 他車（本線）
+        #for position, speed in [(90, 29), (70, 31), (5, 31.5)]:
+            #lane_index = self.np_random.integers(lanes_count)
+            #lane = road.network.get_lane(("a", "b", lane_index))
+            #pos = lane.position(position + self.np_random.uniform(-5, 5), 0)
+            #road.vehicles.append(other_vehicles_type(road, pos, speed=speed + self.np_random.uniform(-1, 1)))
 
         # 合流車両（1台）
         #merging_lane = road.network.get_lane(("j", "k", 0))
@@ -346,6 +355,53 @@ class UniqueEnv(AbstractEnv):
         #)
         #merging_vehicle.target_speed = 30
         #road.vehicles.append(merging_vehicle)
+
+        #self.vehicle = ego_vehicle
+
+    def _create_vehicles(self) -> None:
+        road = self.road
+        lanes_count = self.config.get("lanes_count", 2)
+
+        other_vehicles_type = utils.class_from_path(self.config["other_vehicles_type"])
+
+        # =========================
+        # AV2（意図送信車）: 本線の一番右
+        # =========================
+        right_lane_index = lanes_count - 1
+        right_lane = road.network.get_lane(("a", "b", right_lane_index))
+
+        av2 = IntentVehicle(
+            road,
+            right_lane.position(300, 0),  # 位置は適宜調整OK
+            speed=30
+        )
+        av2.color = (255, 255, 0)  # 黄色（RGB）
+        road.vehicles.append(av2)
+
+        # 👉 ここで「意図」を持たせる（あとで使う用）
+        av2.is_intention_sender = True
+
+
+        # =========================
+        # 人間の車（4台）: 本線ランダム
+        # =========================
+        for position, speed in [(40, 29), (150, 31), (70, 31.5)]:
+            lane_index = self.np_random.integers(lanes_count)
+            lane = road.network.get_lane(("a", "b", lane_index))
+            pos = lane.position(position + self.np_random.uniform(-5, 5), 0)
+            road.vehicles.append(other_vehicles_type(road, pos, speed=speed + self.np_random.uniform(-1, 1)))
+            #print(other_vehicles_type)
+
+
+        # =========================
+        # AV1（自車）: 合流車線
+        # =========================
+        ego_vehicle = self.action_type.vehicle_class(
+            road,
+            road.network.get_lane(("j", "k", 0)).position(30, 0),
+            speed=30
+        )
+        road.vehicles.append(ego_vehicle)
 
         self.vehicle = ego_vehicle
 
