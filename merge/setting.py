@@ -372,14 +372,14 @@ class UniqueEnv(AbstractEnv):
 
         av2 = IntentVehicle(
             road,
-            right_lane.position(300, 0),  # 位置は適宜調整OK
+            right_lane.position(100, 0),  # 位置は適宜調整OK
             speed=30
         )
         av2.color = (255, 255, 0)  # 黄色（RGB）
         road.vehicles.append(av2)
 
-        # 👉 ここで「意図」を持たせる（あとで使う用）
-        av2.is_intention_sender = True
+        # 👉 ここで「意図」を持たせる（あとで使う用）(今は利用してない)
+        #av2.is_intention_sender = True
 
 
         # =========================
