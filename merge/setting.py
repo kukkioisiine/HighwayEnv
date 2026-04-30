@@ -26,6 +26,8 @@ from highway_env.vehicle.objects import Obstacle
 
 #IntentVehcleのクラスメソッド
 from IntentVehicle import IntentVehicle
+from IntentObservation import IntentKinematicObservation
+from IntentObservation import observation_factory
 
 def _reset(self):
     self._create_road()
@@ -105,7 +107,8 @@ class UniqueEnv(AbstractEnv):
         :return: a configuration dict
         """
         return {
-            "observation": {"type": "Kinematics"},
+            #"observation": {"type": "Kinematics"},
+            "observation": {"type": "IntentKinematics"},  # 意図を含む観測に変更
             "action": {"type": "DiscreteMetaAction"},
             "simulation_frequency": 15,  # [Hz]
             "policy_frequency": 1,  # [Hz]
@@ -138,6 +141,7 @@ class UniqueEnv(AbstractEnv):
         Set the types and spaces of observation and action from config.
         """
         self.observation_type = observation_factory(self, self.config["observation"])
+        #print(self.observation_type)
         self.action_type = action_factory(self, self.config["action"])
         self.observation_space = self.observation_type.space()
         self.action_space = self.action_type.space()
@@ -426,6 +430,7 @@ class UniqueEnv(AbstractEnv):
         self._simulate(action)
 
         obs = self.observation_type.observe()
+        #print(obs)
         reward = self._reward(action)
         terminated = self._is_terminated()
         truncated = self._is_truncated()

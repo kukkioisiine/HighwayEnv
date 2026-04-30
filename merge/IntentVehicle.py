@@ -57,7 +57,7 @@ class IntentVehicle(IDMVehicle):
 
         self.is_intention_sender = True
 
-        print(f"[IntentVehicle] intent = {self.intent}")
+        #print(f"[IntentVehicle] intent = {self.intent}")
 
     def act(self, action: dict | str = None):
         """
@@ -116,6 +116,7 @@ class IntentVehicle(IDMVehicle):
         :param dt: timestep
         """
         self.timer += dt
+        #print(self.timer)
         super().step(dt)
 
     def acceleration(self, ego_vehicle, front_vehicle=None, rear_vehicle=None):
